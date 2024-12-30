@@ -10,6 +10,7 @@ const initialEvents = Array.from(Array(50)).map((_, ix) =>
 const initialData = {
   events: initialEvents,
   paused: false,
+  editing: null,
 };
 
 const liveChartReducer = (state, action) => {
@@ -33,6 +34,12 @@ const liveChartReducer = (state, action) => {
         ...state,
         events: action.payload,
       };
+    case "set_edit_event":
+      // Set the editing state with the selected event details
+      return {
+        ...state,
+        editing: action.payload,
+      };
     default: {
       throw new Error(`Unhandled action type: ${action.type}`);
     }
@@ -41,7 +48,7 @@ const liveChartReducer = (state, action) => {
 
 const LiveChartProvider = ({ children }) => {
   const [data, dispatch] = useReducer(liveChartReducer, initialData);
-  // Set an interval to dispatch new events, unless paused
+  // Set an interval to dispatch new events unless paused
   useEffect(() => {
     const interval = setInterval(() => {
       if (!data.paused) {

@@ -1,16 +1,36 @@
 import React from 'react';
-import { Area, AreaChart, CartesianGrid, Tooltip, XAxis, YAxis, ResponsiveContainer } from 'recharts'
+import { Area, AreaChart, CartesianGrid, Tooltip, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 import { useLiveChartContext } from '../utils/hooks/useLiveChartContext';
 
 const LiveChart = () => {
-    const { data } = useLiveChartContext();
-    const nbTotalEvents = data?.events?.length
+    const { data, dispatch } = useLiveChartContext();
+    const nbTotalEvents = data?.events?.length;
     const eventsFiltered = data.events.slice(nbTotalEvents - 20, nbTotalEvents);
+
+    // Handles click events on the chart, opening the corresponding cell for editing based on the clicked data point
+    const handleChartClick = (e) => {
+        if (e && e.activeTooltipIndex !== undefined) {
+            const clickedEvent = eventsFiltered[e.activeTooltipIndex];
+            if (clickedEvent) {
+                // Dispatch an action to set the editing state for the clicked event
+                dispatch({
+                    type: 'set_edit_event',
+                    payload: {
+                        eventIndex: clickedEvent.index,
+                        field: 'value1', 
+                        value: clickedEvent.value1, 
+                    },
+                });
+            }
+        }
+    };
+
+
     return (
         <div className="mb-8">
             <ResponsiveContainer height={250}>
                 <AreaChart
-                    onClick={(e) => console.log(e.activeTooltipIndex)}
+                    onClick={handleChartClick} 
                     data={eventsFiltered}
                     margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                 >

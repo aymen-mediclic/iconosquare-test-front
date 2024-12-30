@@ -1,41 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLiveChartContext } from '../utils/hooks/useLiveChartContext';
-import TextField from '@mui/material/TextField';
-const LiveTable = props => {
+import { TextField } from '@mui/material';
+
+const LiveTable = () => {
     const { data, dispatch } = useLiveChartContext();
     const nbTotalEvents = data?.events?.length;
     const eventsFiltered = data.events.slice(nbTotalEvents - 20, nbTotalEvents);
 
-    const [editingIndex, setEditingIndex] = useState(null);
     const [newValue, setNewValue] = useState('');
-    const [editingField, setEditingField] = useState(''); 
 
-    // Handles click event on a cell to enable editing
-    const handleCellClick = (index, value, field) => {
-        setEditingIndex(index);
-        setNewValue(value);
-        setEditingField(field); 
+    // Update newValue when editing state changes
+    useEffect(() => {
+        if (data.editing) {
+            setNewValue(data.editing.value);
+        }
+    }, [data.editing]);
+    // Set the field value for editing on cell click
+    const handleCellClick = (event, field) => {
+        dispatch({
+            type: 'set_edit_event',
+            payload: {
+                eventIndex: event.index,
+                field: field,
+                value: event[field],
+            },
+        });
     };
-
-    // Handles blur event to save changes 
+    // Save changes on input blur and reset editing state
     const handleBlur = () => {
-        if (editingIndex !== null) {
-            const updatedEvents = data.events.map(event =>
-                event.index === editingIndex
+        if (data.editing) {
+            const updatedEvents = data.events.map((event) =>
+                event.index === data.editing.eventIndex
                     ? {
                         ...event,
-                        [editingField]: newValue, 
+                        [data.editing.field]: newValue, 
                     }
                     : event
             );
-
             dispatch({ type: 'update_events', payload: updatedEvents });
-            setEditingIndex(null);
-            setEditingField('');
+            dispatch({
+                type: 'set_edit_event',
+                payload: { eventIndex: null, field: '', value: '' },
+            });
         }
     };
-
-    // Updates the new value in the state during editing
+    // Update newValue as the input changes
     const handleChange = (e) => {
         setNewValue(e.target.value);
     };
@@ -53,17 +62,20 @@ const LiveTable = props => {
 
                     <div
                         className="p-2 border-t border-gray-300"
-                        onClick={() => handleCellClick(event.index, event.value1, 'value1')} // Pass field 'value1'
+                        onClick={() => handleCellClick(event, 'value1')}
                     >
-                        {editingIndex === event.index && editingField === 'value1' ? (
+                        {data.editing?.eventIndex === event.index && data.editing?.field === 'value1' ? (
                             <TextField
-                                value={newValue}
-                                onBlur={handleBlur}
-                                onChange={handleChange}
-                                autoFocus
-                                variant="standard"
-                                fullWidth
-                            />
+                            value={newValue}
+                            onBlur={handleBlur}
+                            onChange={handleChange}
+                            autoFocus
+                            variant="standard"
+                            fullWidth
+                            inputProps={{
+                                style: { padding: 0, height: '100%' },
+                            }}
+                        />
                         ) : (
                             event.value1
                         )}
@@ -71,9 +83,9 @@ const LiveTable = props => {
 
                     <div
                         className="p-2 border-t border-gray-300"
-                        onClick={() => handleCellClick(event.index, event.value2, 'value2')} 
+                        onClick={() => handleCellClick(event, 'value2')}
                     >
-                        {editingIndex === event.index && editingField === 'value2' ? (
+                        {data.editing?.eventIndex === event.index && data.editing?.field === 'value2' ? (
                             <TextField
                                 value={newValue}
                                 onBlur={handleBlur}
@@ -81,6 +93,9 @@ const LiveTable = props => {
                                 autoFocus
                                 variant="standard"
                                 fullWidth
+                                inputProps={{
+                                    style: { padding: 0, height: '100%' },
+                                }}
                             />
                         ) : (
                             event.value2
