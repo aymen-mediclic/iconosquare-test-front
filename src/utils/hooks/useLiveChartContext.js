@@ -40,6 +40,12 @@ const liveChartReducer = (state, action) => {
         ...state,
         editing: action.payload,
       };
+    case "reset_events":
+      // Reset all the updated values
+      return {
+        ...state,
+        events: initialEvents,
+      };
     default: {
       throw new Error(`Unhandled action type: ${action.type}`);
     }
